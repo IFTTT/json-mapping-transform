@@ -121,7 +121,7 @@ RSpec.describe 'AndCondition' do
   it 'requires an array of conditions as predicates' do
     expect { Conditions::AndCondition.new('asddf') }.to raise_error(Conditions::ConditionError)
     expect { Conditions::AndCondition.new([{ 'class' => 'AnyCondition' }]) }.to raise_error(Conditions::ConditionError)
-    expect { Conditions::AndCondition.new([{ 'class' => 'FakeCondition' }, { 'class' => 'FakeCondition' }]) }.to raise_error
+    expect { Conditions::AndCondition.new([{ 'class' => 'FakeCondition' }, { 'class' => 'FakeCondition' }]) }.to raise_error(NameError)
   end
 
   context '#apply' do

@@ -23,20 +23,20 @@ conditions:
     - class: InCondition
       predicate:
       - 1000
-  
+
 objects:
 - name: fruits
-  path: "/inventory/*"
+  path: ".inventory[]"
   conditions:
   - name: fruit_condition
-    field: "/itemName"
+    field: ".itemName"
 - name: cheap_food
-  path: "inventory/*"
+  path: ".inventory[]"
   conditions:
   - name: cheap_condition
-    field: "/price"
+    field: ".price"
 - name: performance
-  path: "/weeklyVisitors"
+  path: ".weeklyVisitors"
   conditions:
   - name: high_performance_condition
     output: high

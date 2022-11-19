@@ -1,21 +1,21 @@
 ---
 objects:
 - name: name
-  path: "/name"
+  path: ".name"
 - name: location
-  path: "/location"
+  path: ".location"
 - name: weekly_visitors
-  path: "/weeklyVisitors"
+  path: ".weeklyVisitors"
 - name: store_id
-  path: "/storeId"
+  path: ".storeId"
 - name: employees
-  path: "/employees/*/name"
+  path: ".employees[].name"
 - name: inventory
-  path: "/inventory/*"
+  path: ".inventory"
   attributes:
   - name: item_name
-    path: /itemName
+    path: ".itemName"
   - name: price
-    path: /price
+    path: ".price"
   - name: unit
-    path: /unit
+    path: ".unit"

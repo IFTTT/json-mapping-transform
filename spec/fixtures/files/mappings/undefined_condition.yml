@@ -4,6 +4,6 @@ conditions:
    class: FakeCondition
 objects:
 - name: apple
-  path: "/inventory"
+  path: ".inventory"
   conditions:
   - name: apple_condition

@@ -1,6 +1,10 @@
-require 'yaml'.freeze
-require 'logger'.freeze
-require 'conditions'.freeze
+# frozen_string_literal: true
+
+require 'yaml'
+require 'logger'
+require 'conditions'
+require 'jq'
+require 'multi_json'
 
 ##
 # Stores and applies a mapping to an input ruby Hash
@@ -31,23 +35,24 @@ class JsonMapping
   end
 
   ##
-  # @param [Hash] input_hash A ruby hash onto which the schema should be applied
+  # @param [String, Hash] input A JSON string or a ruby hash onto which the schema should be applied
   # @return [Array] An array of output hashes representing the mapped objects
-  def apply(input_hash)
+  def apply(input)
     raise FormatError, 'Must define objects under the \'objects\' name' if @object_schemas.nil?
 
-    @object_schemas.map { |schema| parse_object(input_hash, schema) }.reduce(&:merge)
+    input_json = input.is_a?(String) ? input : MultiJson.dump(input)
+    @object_schemas.map { |schema| parse_json(input_json, schema) }.reduce(&:merge)
   end
 
   private
 
   ##
   # Maps an object schema to an object in the output
-  # @param [Hash] input_hash The hash onto which the schema should be mapped
+  # @param [String] input_json The hash onto which the schema should be mapped
   # @param [Hash] schema A hash representing the schema which should be applied to the input
   # Raises +FormatError+ if +schema+ is not a +Hash+ or has no key +name+
   # @return [Hash] The output object
-  def parse_object(input_hash, schema)
+  def parse_json(input_json, schema)
     raise FormatError, "Object should be a hash: #{schema}" unless schema.is_a? Hash
     raise FormatError, "Object needs a name: #{schema}" unless schema.key?('name')
 
@@ -56,7 +61,7 @@ class JsonMapping
     if schema.key?('attributes')
       output[schema['name']] = schema['default']
 
-      object_hash = parse_path(input_hash, schema['path'])
+      object_hash = parse_path(input_json, schema['path'])
       return output if object_hash.nil?
 
       unless object_hash.is_a? Array
@@ -67,15 +72,15 @@ class JsonMapping
       object_hash.each do |obj|
         attributes_hash = {}
         schema['attributes'].each do |attribute|
-          attr_hash = parse_object(obj, attribute)
+          attr_hash = parse_json(MultiJson.dump(obj), attribute)
           attributes_hash = attributes_hash.merge(attr_hash)
         end
         attrs << attributes_hash
       end
 
-      output[schema['name']] = attrs.length == 1 && schema['path'][-1] != '*' ? attrs[0] : attrs
+      output[schema['name']] = attrs
     else # Its a value
-      output = map_value(input_hash, schema)
+      output = map_value(input_json, schema)
     end
 
     output
@@ -83,17 +88,17 @@ class JsonMapping
 
   ##
   # Maps a schema to a single field in the output schema
-  # @param [Hash] input_hash The input hash to be mapped
+  # @param [String] input_json The input hash to be mapped
   # @param [Hash] schema The schema which should be applied
   # @return [Hash] A Hash which represents the applied schema
-  def map_value(input_hash, schema)
+  def map_value(input_json, schema)
     raise FormatError, "Schema should be a hash: #{schema}" unless schema.is_a? Hash
 
     output = {}
     output[schema['name']] = schema['default']
     return output if schema['path'].nil?
 
-    value = parse_path(input_hash, schema['path'])
+    value = parse_path(input_json, schema['path'])
     return output if value.nil?
 
     if schema.key?('conditions')
@@ -112,42 +117,23 @@ class JsonMapping
   end
 
   ##
-  # @param [Hash] input_hash The input hash
+  # @param [String] input_json The input hash
   # @param [String] path The path at which to grab the value
   # @return [Any] The value at the particular path
-  def parse_path(input_hash, path)
+  def parse_path(input_json, path)
+    raise ArgumentError, "input_json must be string, not #{input_json.class}" unless input_json.is_a? String
     raise ArgumentError, "path must be string, not #{path.class}" unless path.is_a? String
 
-    parts = path.split('/')
-    value = input_hash
+    value = JQ(input_json).search(path)
+    value = value.first if value.length <= 1
 
-    parts.each_with_index do |part, idx|
-      if value.nil?
-        @logger.warn("Could not find #{path} in #{input_hash}")
-        break
-      end
-
-      if part == '*'
-        raise PathError, "#{parts[0, idx].join('/')} in #{input_hash} is not an array" unless value.is_a? Array
-
-        return value.map { |obj| parse_path(obj, parts[idx + 1..-1].join('/')) }
-      else
-        next if part.empty?
-
-        if value.is_a? Array
-          part = part.to_i
-
-          if part >= value.length
-            @logger.warn("Index went out of bounds while parsing #{path} in #{input_hash}")
-            value = nil
-            break
-          end
-        end
-
-        value = value[part]
-      end
+    if value.nil?
+      @logger.warn("Could not find #{path} in #{input_json}")
     end
+
     value
+  rescue JQ::Error => e
+    raise PathError, e.message
   end
 
   ##
@@ -168,7 +154,7 @@ class JsonMapping
 
       input_val = [input_val] unless input_val.is_a? Array
       input_val = input_val.select do |x|
-        x = parse_path(x, cond['field']) if cond.key?('field')
+        x = parse_path(MultiJson.dump(x), cond['field']) if cond.key?('field')
         condition.apply(x)
       end
 
@@ -179,6 +165,6 @@ class JsonMapping
       output << (cond['output'] || input_val)
     end
 
-    return (output.length == 1 ? output[0] : output) unless output.empty?
+    output.length == 1 ? output[0] : output unless output.empty?
   end
 end

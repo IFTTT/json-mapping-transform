@@ -11,7 +11,7 @@ RSpec.describe 'JsonMapping' do
       'objects' => [
         {
           'name' => 'foo',
-          'path' => '/key0',
+          'path' => '.key0',
           'default' => 'bar'
         }
       ]
@@ -108,7 +108,7 @@ RSpec.describe 'JsonMapping' do
       end
 
       it 'encounters a null object' do
-        simple_yaml['objects'][0]['path'] = '/key/dne'
+        simple_yaml['objects'][0]['path'] = '.key.dne'
         simple_yaml['objects'][0]['attributes'] = [{ 'name' => 'nested', 'default' => 'empty' }]
         allow(YAML).to receive(:safe_load).and_return(simple_yaml)
 
@@ -117,7 +117,7 @@ RSpec.describe 'JsonMapping' do
       end
 
       it 'encountering a non-existent path' do
-        simple_yaml['objects'][0]['path'] = '/key/dne'
+        simple_yaml['objects'][0]['path'] = '.key.dne'
         allow(YAML).to receive(:safe_load).and_return(simple_yaml)
 
         json = JsonMapping.new('').apply(simple_obj)
@@ -126,7 +126,7 @@ RSpec.describe 'JsonMapping' do
 
       it 'indexing out of bounds' do
         simple_obj['arr'] = []
-        simple_yaml['objects'][0]['path'] = '/arr/0'
+        simple_yaml['objects'][0]['path'] = '.arr[0]'
         allow(YAML).to receive(:safe_load).and_return(simple_yaml)
 
         json = JsonMapping.new('').apply(simple_obj)
@@ -176,7 +176,7 @@ RSpec.describe 'JsonMapping' do
       end
 
       it 'tries mapping a non-array' do
-        simple_yaml['objects'][0]['path'] = 'key0/*'
+        simple_yaml['objects'][0]['path'] = '.key0[]'
         allow(YAML).to receive(:safe_load).and_return(simple_yaml)
         expect { JsonMapping.new('', 't' => nil).apply(simple_obj) }.to raise_error(JsonMapping::PathError)
       end
@@ -185,7 +185,6 @@ RSpec.describe 'JsonMapping' do
     module Conditions
       class AppleCondition < BaseCondition
         def apply(value)
-          puts value
           value.is_a?(Hash) && value['itemName'] == 'Apples'
         end
       end
