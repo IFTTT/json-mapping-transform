@@ -25,7 +25,7 @@ RSpec.describe 'JsonMapping' do
 
     it 'succeeds with basic mapping' do
       path = File.expand_path('fixtures/files/mappings/basic.yml', __dir__)
-      output = JsonMapping.new(path).apply(store_fixture)
+      output = JsonMapping.new(File.read(path)).apply(store_fixture)
 
       expect(output).to eq(
         {
@@ -45,7 +45,7 @@ RSpec.describe 'JsonMapping' do
 
     it 'loads defaults properly' do
       path = File.expand_path('fixtures/files/mappings/defaults.yml', __dir__)
-      output = JsonMapping.new(path).apply(store_fixture)
+      output = JsonMapping.new(File.read(path)).apply(store_fixture)
       expect(output).to eq(
         {
           'name' => 'Trader Joe\'s',
@@ -59,7 +59,7 @@ RSpec.describe 'JsonMapping' do
       transforms = {
         'listing_transform' => ->(list) { list.map { |x| "#{x['itemName']} at $#{x['price']}/#{x['unit']}" } }
       }
-      output = JsonMapping.new(path, transforms).apply(store_fixture)
+      output = JsonMapping.new(File.read(path), transforms).apply(store_fixture)
       expect(output).to eq(
         {
           'name' => 'Trader Joe\'s',
@@ -70,7 +70,7 @@ RSpec.describe 'JsonMapping' do
 
     it 'applies conditions properly' do
       path = File.expand_path('fixtures/files/mappings/conditions.yml', __dir__)
-      output = JsonMapping.new(path).apply(store_fixture)
+      output = JsonMapping.new(File.read(path)).apply(store_fixture)
       expect(output).to eq(
         {
           'performance' => 'high',
@@ -88,7 +88,7 @@ RSpec.describe 'JsonMapping' do
     it 'keeps arrays as arrays even if there is one object' do
       store_fixture['inventory'] = [{ 'itemName' => 'Apples', 'price' => 1, 'unit' => 'lb', 'category' => 'fruit' }]
       path = File.expand_path('fixtures/files/mappings/basic.yml', __dir__)
-      output = JsonMapping.new(path).apply(store_fixture)
+      output = JsonMapping.new(File.read(path)).apply(store_fixture)
 
       expect(output).to eq(
         {
@@ -192,13 +192,13 @@ RSpec.describe 'JsonMapping' do
 
     it 'can use user-defined conditions' do
       path = File.expand_path('fixtures/files/mappings/custom_condition.yml', __dir__)
-      output = JsonMapping.new(path).apply(store_fixture)
+      output = JsonMapping.new(File.read(path)).apply(store_fixture)
       expect(output['apple']).to eq([{ 'itemName' => 'Apples', 'price' => 0.5, 'unit' => 'lb' }])
     end
 
     it 'raises an error if the condition is not found' do
       path = File.expand_path('fixtures/files/mappings/undefined_condition.yml', __dir__)
-      expect { JsonMapping.new(path).apply(store_fixture) }.to raise_error(NameError)
+      expect { JsonMapping.new(File.read(path)).apply(store_fixture) }.to raise_error(NameError)
     end
   end
 end

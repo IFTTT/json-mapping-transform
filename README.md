@@ -173,7 +173,7 @@ objects:
 transforms = {
   'listing_transform' => ->(list) { list.map { |x| "#{x['itemName']} at $#{x['price']}/#{x['unit']}" } }
 }
-output = JsonMapping.new(path, transforms).map(store_fixture)
+output = JsonMapping.new(yaml, transforms).map(store_fixture)
 ```
 #### Output
 ```json
@@ -219,7 +219,7 @@ module Conditions
   end
 end
 
-output = JsonMapping.new(path).map(store_fixture)
+output = JsonMapping.new(yaml).map(store_fixture)
 ```
 #### Output
 ```json

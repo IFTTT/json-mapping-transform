@@ -20,10 +20,10 @@ class JsonMapping
   class FormatError < StandardError; end
 
   ##
-  # @param [String] schema_path The path to the YAML schema
+  # @param [String] yaml The YAML schema
   # @param [Hash] transforms A hash of callable objects (Procs/Lambdas). Keys must match transform names specified in YAML
-  def initialize(schema_path, transforms = {})
-    schema = YAML.safe_load(File.read(schema_path))
+  def initialize(yaml, transforms = {})
+    schema = YAML.safe_load(yaml)
 
     @conditions = (schema['conditions'] || {}).map do |key, value|
       [key, Object.const_get("Conditions::#{value['class']}").new(value['predicate'])]
