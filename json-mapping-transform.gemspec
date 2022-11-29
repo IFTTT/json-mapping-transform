@@ -3,7 +3,7 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 
 Gem::Specification.new do |spec|
   spec.name          = 'json-mapping-transform'
-  spec.version       = '0.2.0'
+  spec.version       = '0.2.1'
   spec.authors       = ['Anmol Parande']
   spec.email         = ['parande.anmol@gmail.com']
 
@@ -23,12 +23,13 @@ Gem::Specification.new do |spec|
   end
   spec.require_paths = ['lib']
 
+  spec.add_runtime_dependency 'ruby-jq'
+
   spec.add_development_dependency 'bundler', '~> 2.0'
   spec.add_development_dependency 'multi_json'
   spec.add_development_dependency 'rake', '~> 10.0'
   spec.add_development_dependency 'redcarpet'
   spec.add_development_dependency 'rspec', '~> 3.0'
-  spec.add_development_dependency 'ruby-jq'
   spec.add_development_dependency 'simplecov'
   spec.add_development_dependency 'yard'
 end
