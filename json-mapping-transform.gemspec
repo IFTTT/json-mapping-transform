@@ -4,12 +4,12 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 Gem::Specification.new do |spec|
   spec.name          = 'json-mapping-transform'
   spec.version       = '0.2.2'
-  spec.authors       = ['Anmol Parande']
-  spec.email         = ['parande.anmol@gmail.com']
+  spec.authors       = ['Anmol Parande', 'Jacob Frautschi']
+  spec.email         = ['dev@ifttt.com']
 
   spec.summary       = 'Map one JSON format into another JSON format'
   spec.description   = 'When building data pipelines, it is often useful to extract and transfrom data from an input JSON and output it in a different format. The standard process for doing this in Ruby is to write a series of if-else logic coupled with for-loops. This code ends up being largely redundant, confusing, and difficult to maintain or change. This Gem provides an easy and extensible solution to this problem by allowing you to define your mapping in YAML and apply it to any JSON object in a single line of code.'
-  spec.homepage      = 'https://github.com/aparande/json-mapping-transform'
+  spec.homepage      = 'https://github.com/IFTTT/json-mapping-transform'
   spec.license       = 'MIT'
 
   spec.metadata['homepage_uri'] = spec.homepage
