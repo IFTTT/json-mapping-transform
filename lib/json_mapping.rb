@@ -125,7 +125,7 @@ class JsonMapping
     raise ArgumentError, "path must be string, not #{path.class}" unless path.is_a? String
 
     value = JQ(input_json).search(path)
-    value = value.first if value.length <= 1
+    value = value.first unless value.length > 1 || path.end_with?('[]')
 
     if value.nil?
       @logger.warn("Could not find #{path} in #{input_json}")
