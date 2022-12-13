@@ -64,12 +64,8 @@ class JsonMapping
       object_hash = parse_path(input_json, schema['path'])
       return output if object_hash.nil?
 
-      unless object_hash.is_a? Array
-        object_hash = [object_hash]
-      end
-
       attrs = []
-      object_hash.each do |obj|
+      Array.wrap(object_hash).each do |obj|
         attributes_hash = {}
         schema['attributes'].each do |attribute|
           attr_hash = parse_json(MultiJson.dump(obj), attribute)
@@ -77,6 +73,8 @@ class JsonMapping
         end
         attrs << attributes_hash
       end
+
+      attrs = attrs.first unless should_be_array?(schema['path'], attrs)
 
       output[schema['name']] = attrs
     else # Its a value
@@ -125,7 +123,7 @@ class JsonMapping
     raise ArgumentError, "path must be string, not #{path.class}" unless path.is_a? String
 
     value = JQ(input_json).search(path)
-    value = value.first unless value.length > 1 || path.end_with?('[]')
+    value = value.first unless should_be_array?(path, value)
 
     if value.nil?
       @logger.warn("Could not find #{path} in #{input_json}")
@@ -166,5 +164,9 @@ class JsonMapping
     end
 
     output.length == 1 ? output[0] : output unless output.empty?
+  end
+
+  def should_be_array?(path, value)
+    path.end_with?('[]') || value.length > 1
   end
 end
